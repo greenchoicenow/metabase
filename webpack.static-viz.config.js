@@ -1,3 +1,7 @@
+const webpack = require("webpack");
+require("global/window");
+require("global/process");
+
 const SRC_PATH = __dirname + "/frontend/src/metabase";
 const BUILD_PATH = __dirname + "/resources/frontend_client";
 const CLJS_SRC_PATH = __dirname + "/frontend/src/cljs_release";
@@ -32,6 +36,8 @@ module.exports = env => {
     output: {
       path: BUILD_PATH + "/app/dist",
       filename: "[name].bundle.js",
+      publicPath: "",
+      globalObject: "this",
     },
 
     module: {
@@ -55,5 +61,11 @@ module.exports = env => {
     optimization: {
       minimize: !shouldDisableMinimization,
     },
+    plugins: [
+      new webpack.ProvidePlugin({
+        window: "global/window",
+        process: "global/process",
+      }),
+    ],
   };
 };
