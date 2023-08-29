@@ -32,6 +32,8 @@ module.exports = env => {
     output: {
       path: BUILD_PATH + "/app/dist",
       filename: "[name].bundle.js",
+      publicPath: "",
+      globalObject: "this",
     },
 
     module: {
