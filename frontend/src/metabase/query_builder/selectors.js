@@ -530,7 +530,7 @@ export const getMode = createSelector(
   [getLastRunQuestion, isZoomingRow],
   (question, isZoomingRow) =>
     isZoomingRow
-      ? new Mode(question, ObjectMode)
+      ? new Mode(question, ObjectMode) // TODO [31004]: Make this work with MLv2 drills, without extra mode
       : question && getQuestionMode(question),
 );
 
