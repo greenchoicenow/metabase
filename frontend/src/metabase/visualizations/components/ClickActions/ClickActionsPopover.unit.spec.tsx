@@ -24,6 +24,7 @@ import type { ClickObject } from "metabase-lib/queries/drills/types";
 import { SAMPLE_METADATA } from "metabase-lib/test-helpers";
 import Question from "metabase-lib/Question";
 import type StructuredQuery from "metabase-lib/queries/StructuredQuery";
+import type Dimension from "metabase-lib/Dimension";
 
 const ORDERS_COLUMNS = [
   createOrdersIdDatasetColumn(),
@@ -40,7 +41,7 @@ const ORDERS_COLUMNS = [
 describe("ClickActionsPopover", function () {
   describe("apply click actions", () => {
     describe("ColumnFormattingAction", () => {
-      it("should apply column formatting to default question", async () => {
+      it("should apply column formatting to default ORDERS question on header click", async () => {
         const { props } = await setup();
 
         const gearIconButton = getIcon("gear");
@@ -63,11 +64,9 @@ describe("ClickActionsPopover", function () {
         });
       });
     });
-  });
 
-  describe("apply drills", () => {
     describe("ColumnFilterDrill", () => {
-      it("should apply ColumnFilterDrill to default question", async () => {
+      it("should apply ColumnFilterDrill to default ORDERS question on header click", async () => {
         const filterValue = 10;
         const { props } = await setup();
 
@@ -104,7 +103,7 @@ describe("ClickActionsPopover", function () {
     });
 
     describe("SortDrill", () => {
-      it("should apply SortDrill to default question", async () => {
+      it("should apply SortDrill to default ORDERS question on header click", async () => {
         const { props } = await setup();
 
         const sortDesc = getIcon("arrow_down");
@@ -132,6 +131,208 @@ describe("ClickActionsPopover", function () {
         });
       });
     });
+
+    describe("SummarizeColumnByTimeDrill", () => {
+      it.each([
+        {
+          column: createOrdersTotalDatasetColumn(),
+          expectedCard: {
+            nextCard: {
+              collection_id: undefined,
+              dataset: undefined,
+              dataset_query: {
+                database: SAMPLE_DB_ID,
+                query: {
+                  aggregation: [
+                    [
+                      "sum",
+                      [
+                        "field",
+                        ORDERS.TOTAL,
+                        {
+                          "base-type": "type/Float",
+                        },
+                      ],
+                    ],
+                  ],
+                  breakout: [
+                    [
+                      "field",
+                      ORDERS.CREATED_AT,
+                      {
+                        "base-type": "type/DateTime",
+                        "temporal-unit": "month",
+                      },
+                    ],
+                  ],
+                  "source-table": ORDERS_ID,
+                },
+                type: "query",
+              },
+              display: "table",
+              name: undefined,
+              visualization_settings: {},
+            },
+            objectId: undefined,
+          },
+        },
+        {
+          column: createOrdersQuantityDatasetColumn(),
+          expectedCard: {
+            nextCard: {
+              collection_id: undefined,
+              dataset: undefined,
+              dataset_query: {
+                database: SAMPLE_DB_ID,
+                query: {
+                  aggregation: [
+                    [
+                      "sum",
+                      [
+                        "field",
+                        ORDERS.QUANTITY,
+                        {
+                          "base-type": "type/Integer",
+                        },
+                      ],
+                    ],
+                  ],
+                  breakout: [
+                    [
+                      "field",
+                      ORDERS.CREATED_AT,
+                      {
+                        "base-type": "type/DateTime",
+                        "temporal-unit": "month",
+                      },
+                    ],
+                  ],
+                  "source-table": ORDERS_ID,
+                },
+                type: "query",
+              },
+              display: "table",
+              name: undefined,
+              visualization_settings: {},
+            },
+            objectId: undefined,
+          },
+        },
+      ])(
+        "should apply drill to default ORDERS question on header click",
+        async ({ column, expectedCard }) => {
+          const { props } = await setup({
+            clicked: {
+              column,
+              value: undefined,
+            },
+          });
+
+          const drill = screen.getByText("Sum over time");
+          expect(drill).toBeInTheDocument();
+
+          userEvent.click(drill);
+
+          expect(props.onChangeCardAndRun).toHaveBeenCalledTimes(1);
+          expect(props.onChangeCardAndRun).toHaveBeenLastCalledWith(
+            expectedCard,
+          );
+        },
+      );
+    });
+
+    describe("FKFilterDrill", () => {
+      it.each([
+        {
+          column: createOrdersUserIdDatasetColumn(),
+          columnName: createOrdersUserIdDatasetColumn().name,
+          cellValue: "1",
+          drillTitle: "View this User's Orders",
+          expectedCard: {
+            nextCard: {
+              collection_id: undefined,
+              dataset: undefined,
+              dataset_query: {
+                database: SAMPLE_DB_ID,
+                query: {
+                  filter: [
+                    "=",
+                    [
+                      "field",
+                      ORDERS.USER_ID,
+                      {
+                        "base-type": "type/Integer",
+                      },
+                    ],
+                    "1",
+                  ],
+                  "source-table": ORDERS_ID,
+                },
+                type: "query",
+              },
+              display: "table",
+              name: undefined,
+              visualization_settings: {},
+            },
+            objectId: undefined,
+          },
+        },
+        {
+          column: createOrdersProductIdDatasetColumn(),
+          columnName: createOrdersProductIdDatasetColumn().name,
+          cellValue: "111",
+          drillTitle: "View this Product's Orders",
+          expectedCard: {
+            nextCard: {
+              collection_id: undefined,
+              dataset: undefined,
+              dataset_query: {
+                database: SAMPLE_DB_ID,
+                query: {
+                  filter: [
+                    "=",
+                    [
+                      "field",
+                      ORDERS.PRODUCT_ID,
+                      {
+                        "base-type": "type/Integer",
+                      },
+                    ],
+                    "111",
+                  ],
+                  "source-table": ORDERS_ID,
+                },
+                type: "query",
+              },
+              display: "table",
+              name: undefined,
+              visualization_settings: {},
+            },
+            objectId: undefined,
+          },
+        },
+      ])(
+        "should apply drill on $columnName cell click",
+        async ({ column, columnName, cellValue, drillTitle, expectedCard }) => {
+          const { props } = await setup({
+            clicked: {
+              column,
+              value: cellValue,
+            },
+          });
+
+          const drill = screen.getByText(drillTitle);
+          expect(drill).toBeInTheDocument();
+
+          userEvent.click(drill);
+
+          expect(props.onChangeCardAndRun).toHaveBeenCalledTimes(1);
+          expect(props.onChangeCardAndRun).toHaveBeenLastCalledWith(
+            expectedCard,
+          );
+        },
+      );
+    });
   });
 });
 
@@ -146,16 +347,20 @@ async function setup({
     value: undefined,
   },
   settings = {},
+  dimension: inputDimension,
 }: Partial<{
   question: Question;
   clicked: ClickObject | undefined;
   settings: Record<string, any>;
+  dimension?: Dimension;
 }> = {}) {
   const mode = checkNotNull(getMode(question));
 
-  const dimension = (question?.query() as StructuredQuery).dimensionForColumn(
-    checkNotNull(clicked?.column),
-  );
+  const dimension =
+    inputDimension ||
+    (question?.query() as StructuredQuery).dimensionForColumn(
+      checkNotNull(clicked?.column),
+    );
 
   clicked = {
     ...clicked,
