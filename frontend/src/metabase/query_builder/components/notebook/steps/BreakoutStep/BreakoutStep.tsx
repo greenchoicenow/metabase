@@ -91,6 +91,7 @@ interface BreakoutPopoverProps {
     breakout: Lib.BreakoutClause,
     column: Lib.ColumnMetadata,
   ) => void;
+  onClose?: () => void;
 }
 
 const BreakoutPopover = ({
@@ -100,6 +101,7 @@ const BreakoutPopover = ({
   breakoutIndex,
   onAddBreakout,
   onUpdateBreakoutColumn,
+  onClose,
 }: BreakoutPopoverProps) => {
   const checkColumnSelected = (
     columnInfo: Lib.ColumnDisplayInfo,
@@ -140,6 +142,7 @@ const BreakoutPopover = ({
           onAddBreakout(column);
         }
       }}
+      onClose={onClose}
     />
   );
 };
