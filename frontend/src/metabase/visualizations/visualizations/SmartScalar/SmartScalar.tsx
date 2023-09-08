@@ -48,7 +48,7 @@ import {
   getValueWidth,
 } from "./utils";
 
-export function SmartScalar(props) {
+export function SmartScalar(props: any) {
   const {
     actionButtons,
     onChangeCardAndRun,
@@ -72,8 +72,8 @@ export function SmartScalar(props) {
 
   const _scalar = useRef(null);
 
-  const metricIndex = cols.findIndex(col => !isDate(col));
-  const dimensionIndex = cols.findIndex(col => isDate(col));
+  const metricIndex = cols.findIndex((col: any) => !isDate(col));
+  const dimensionIndex = cols.findIndex((col: any) => isDate(col));
 
   const lastRow = rows[rows.length - 1];
   const value = lastRow?.[metricIndex];
@@ -147,7 +147,7 @@ export function SmartScalar(props) {
         column: cols[dimensionIndex],
       },
     ],
-    data: rows[rows.length - 1].map((value, index) => ({
+    data: rows[rows.length - 1].map((value: any, index: number) => ({
       value,
       col: cols[index],
     })),
@@ -233,7 +233,7 @@ export function SmartScalar(props) {
             </Tooltip>
 
             {canShowPreviousValue && (
-              <PreviousValue id="SmartScalar-PreviousValue" responsive>
+              <PreviousValue id="SmartScalar-PreviousValue">
                 {previousValueDisplayInCard}
               </PreviousValue>
             )}
@@ -244,58 +244,58 @@ export function SmartScalar(props) {
   );
 }
 
-SmartScalar.uiName = t`Trend`;
-SmartScalar.identifier = "smartscalar";
-SmartScalar.iconName = "smartscalar";
-SmartScalar.canSavePng = false;
+Object.assign(SmartScalar, {
+  uiName: t`Trend`,
+  identifier: "smartscalar",
+  iconName: "smartscalar",
+  canSavePng: false,
 
-SmartScalar.minSize = getMinSize("smartscalar");
-SmartScalar.defaultSize = getDefaultSize("smartscalar");
+  minSize: getMinSize("smartscalar"),
+  defaultSize: getDefaultSize("smartscalar"),
 
-SmartScalar.noHeader = true;
+  noHeader: true,
 
-SmartScalar.settings = {
-  ...columnSettings({
-    getColumns: (
-      [
-        {
-          data: { cols },
-        },
-      ],
-      settings,
-    ) => [
-      // try and find a selected field setting
-      cols.find(col => col.name === settings["scalar.field"]) ||
-        // fall back to the second column
-        cols[1] ||
-        // but if there's only one column use that
-        cols[0],
-    ],
-  }),
-  "scalar.switch_positive_negative": {
-    title: t`Switch positive / negative colors?`,
-    widget: "toggle",
-    inline: true,
-  },
-  click_behavior: {},
-};
-
-SmartScalar.isSensible = ({ insights }) => {
-  return insights && insights.length > 0;
-};
-
-// Smart scalars need to have a breakout
-SmartScalar.checkRenderable = (
-  [
-    {
-      data: { insights },
+  settings: {
+    ...columnSettings({
+      getColumns(series: any, settings: any) {
+        const [
+          {
+            data: { cols },
+          },
+        ] = series;
+        // try and find a selected field setting
+        return (
+          cols.find((col: any) => col.name === settings["scalar.field"]) ||
+          // fall back to the second column
+          cols[1] ||
+          // but if there's only one column use that
+          cols[0]
+        );
+      },
+    }),
+    "scalar.switch_positive_negative": {
+      title: t`Switch positive / negative colors?`,
+      widget: "toggle",
+      inline: true,
     },
-  ],
-  settings,
-) => {
-  if (!insights || insights.length === 0) {
-    throw new NoBreakoutError(
-      t`Group by a time field to see how this has changed over time`,
-    );
-  }
-};
+    click_behavior: {},
+  },
+
+  isSensible({ insights }: { insights: any }) {
+    return insights && insights.length > 0;
+  },
+
+  // Smart scalars need to have a breakout
+  checkRenderable(series: any, settings: any) {
+    const [
+      {
+        data: { insights },
+      },
+    ] = series;
+    if (!insights || insights.length === 0) {
+      throw new NoBreakoutError(
+        t`Group by a time field to see how this has changed over time`,
+      );
+    }
+  },
+});
